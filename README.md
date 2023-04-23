@@ -1,6 +1,6 @@
-<p align="center">
+<center>
 #TramNetworkSimulation
-</p>
+</center>
 
 <br/>
 
