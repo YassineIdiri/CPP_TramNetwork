@@ -1,0 +1,56 @@
+NombreLignes: 4
+
+Ligne1
+NombreArrets: 4
+
+Chataigner (100;100)
+Tram1 (7)
+St-Nazaire (300;300)
+PasDeTram
+Tuilerie (700;300)
+Tram2  (7)
+Rattachement (900;100)
+Tram3  (8)
+
+Ligne2
+NombreArrets: 5
+
+BelAir (100;400)
+Tram4 (8)
+Daguerre (200;500)
+PasDeTram
+Porte-Haute (550;450)
+PasDeTram
+CiteAdministrative (800;400)
+PasDeTram
+Illberg (1200;400)
+Tram5 (8)
+
+Ligne3
+NombreArrets: 5
+
+Doller (700;650)
+Tram6 (7)
+Coteau (750;500)
+PasDeTram
+CiteAdministrative (800;400)
+Tram7 (7) 
+GrandRex (980;230)
+PasDeTram
+PorteHaute (1200;100)
+Tram8 (8)
+
+Ligne4
+NombreArrets: 5
+
+Republique (100;600)
+Tram9 (7)
+Daguerre (200;500)
+Tram10 (7)
+St-Nazaire (300;300)
+Tram11 (8)
+Universite (300;100)
+PasDeTram
+GareCentrale (700;50)
+Tram12 (8)
+
