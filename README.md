@@ -1,6 +1,6 @@
-<div align="center">
-
+<p align="center">
 # TramNetworkSimulation
+</p>
 
 <br/>
 
@@ -10,11 +10,13 @@
 
 
 
+<p align="center">
 # Installation
+</p>
 
-Create a C++ project and add all the files.    
-Then add the text document "Ligne.txt" in the same directory.    
-Finally start the program.    
-Trams traveling in opposite directions are shown in different colors (yellow and red).  
+- Create a C++ project and add all the files.    
+- Then add the text document "Ligne.txt" in the same directory.    
+- Finally start the program.    
+- Trams traveling in opposite directions are shown in different colors (yellow and red).  
 
 
