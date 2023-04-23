@@ -1,5 +1,5 @@
 <p align="center">
-# TramNetworkSimulation
+#TramNetworkSimulation
 </p>
 
 <br/>
@@ -11,7 +11,7 @@
 
 
 <p align="center">
-# Installation
+#Installation
 </p>
 
 - Create a C++ project and add all the files.    
