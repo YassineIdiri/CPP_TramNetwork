@@ -1,7 +1,4 @@
-<center>
-#TramNetworkSimulation
-</center>
-
+<h1 style="text-align: center;">TramNetworkSimulation</h1>
 <br/>
 
 ![TramNetworkSimulation1](https://user-images.githubusercontent.com/120946916/233862425-80805603-8997-4d95-8dc4-0b8cc307929d.png)
