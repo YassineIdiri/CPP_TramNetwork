@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "graphics.h"
+#include "../headers/graphics.h"
 
 #define MAX_PAGES 16
 
@@ -25,14 +25,14 @@ static HBITMAP hPutimageBitmap;
 static int timeout_expired;
 
 #define PEN_CACHE_SIZE   8
-#define FONT_CACHE_SIZE  8 
+#define FONT_CACHE_SIZE  8
 #define BG               16
 #define TIMER_ID         1
 
 //
 // When XOR or NOT write modes are used for drawing high BG bit is cleared, so
 // drawing colors should be adjusted to preserve this bit
-// 
+//
 #define ADJUSTED_MODE(mode) ((mode) == XOR_PUT || (mode) == NOT_PUT)
 
 int bgiemu_handle_redraw = TRUE;
@@ -44,16 +44,16 @@ static int window_width;
 static int window_height;
 
 static int line_style_cnv[] = {
-    PS_SOLID, PS_DOT, PS_DASHDOT, PS_DASH, 
+    PS_SOLID, PS_DOT, PS_DASHDOT, PS_DASH,
     PS_DASHDOTDOT /* if user style lines are not supported */
-}; 
-static int write_mode_cnv[] = 
+};
+static int write_mode_cnv[] =
   {R2_COPYPEN, R2_XORPEN, R2_MERGEPEN, R2_MASKPEN, R2_NOTCOPYPEN};
-static int bitblt_mode_cnv[] = 
+static int bitblt_mode_cnv[] =
   {SRCCOPY, SRCINVERT, SRCPAINT, SRCAND, NOTSRCCOPY};
 
-static int font_weight[] = 
-{ 
+static int font_weight[] =
+{
     FW_BOLD,    // DefaultFont
     FW_NORMAL,  // TriplexFont
     FW_NORMAL,  // SmallFont
@@ -67,7 +67,7 @@ static int font_weight[] =
     FW_BOLD     // BoldFont
 };
 
-static int font_family[] = 
+static int font_family[] =
 {
     FIXED_PITCH|FF_DONTCARE,     // DefaultFont
     VARIABLE_PITCH|FF_ROMAN,     // TriplexFont
@@ -82,7 +82,7 @@ static int font_family[] =
     VARIABLE_PITCH|FF_DONTCARE   // BoldFont
   };
 
-static char* font_name[] = 
+static char* font_name[] =
 {
     "Console",          // DefaultFont
     "Times New Roman",  // TriplexFont
@@ -97,16 +97,16 @@ static char* font_name[] =
     "Courier New Bold", // BoldFont
 };
 
-static int text_halign_cnv[] = {TA_LEFT, TA_CENTER, TA_RIGHT};  
+static int text_halign_cnv[] = {TA_LEFT, TA_CENTER, TA_RIGHT};
 static int text_valign_cnv[] = {TA_BOTTOM, TA_BASELINE, TA_TOP};
 
 static palettetype current_palette;
 
-static struct { int width; int height; } font_metrics[][11] = { 
+static struct { int width; int height; } font_metrics[][11] = {
 {{0,0},{8,8},{16,16},{24,24},{32,32},{40,40},{48,48},{56,56},{64,64},{72,72},{80,80}}, // DefaultFont
 {{0,0},{13,18},{14,20},{16,23},{22,31},{29,41},{36,51},{44,62},{55,77},{66,93},{88,124}}, // TriplexFont
 {{0,0},{3,5},{4,6},{4,6},{6,9},{8,12},{10,15},{12,18},{15,22},{18,27},{24,36}}, // SmallFont
-{{0,0},{11,19},{12,21},{14,24},{19,32},{25,42},{31,53},{38,64},{47,80},{57,96},{76,128}}, // SansSerifFont 
+{{0,0},{11,19},{12,21},{14,24},{19,32},{25,42},{31,53},{38,64},{47,80},{57,96},{76,128}}, // SansSerifFont
 {{0,0},{13,19},{14,21},{16,24},{22,32},{29,42},{36,53},{44,64},{55,80},{66,96},{88,128}}, // GothicFont
 // I am not sure about metrics of following fonts
 {{0,0},{11,19},{12,21},{14,24},{19,32},{25,42},{31,53},{38,64},{47,80},{57,96},{76,128}}, // ScriptFont
@@ -115,25 +115,25 @@ static struct { int width; int height; } font_metrics[][11] = {
 {{0,0},{11,19},{12,21},{14,24},{19,32},{25,42},{31,53},{38,64},{47,80},{57,96},{76,128}}, // ComplexFont
 {{0,0},{11,19},{12,21},{14,24},{19,32},{25,42},{31,53},{38,64},{47,80},{57,96},{76,128}}, // EuropeanFont
 {{0,0},{11,19},{12,21},{14,24},{19,32},{25,42},{31,53},{38,64},{47,80},{57,96},{76,128}} // BoldFont
-}; 
+};
 
-struct BGIimage { 
+struct BGIimage {
     short width;
     short height;
     int   reserved; // let bits be aligned to DWORD boundary
     char  bits[1];
 };
 
-struct BGIbitmapinfo { 
+struct BGIbitmapinfo {
     BITMAPINFOHEADER hdr;
     short            color_table[16];
 };
-    
+
 static BGIbitmapinfo bminfo = {
     {sizeof(BITMAPINFOHEADER), 0, 0, 1, 4, BI_RGB}
 };
 
-static int* image_bits; 
+static int* image_bits;
 
 static int normal_font_size[] = { 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};
 
@@ -152,9 +152,9 @@ static viewporttype view_settings;
 
 static int font_mul_x, font_div_x, font_mul_y, font_div_y;
 
-static enum { ALIGN_NOT_SET, UPDATE_CP, NOT_UPDATE_CP } text_align_mode; 
+static enum { ALIGN_NOT_SET, UPDATE_CP, NOT_UPDATE_CP } text_align_mode;
 
-#define BORDER_WIDTH  8 
+#define BORDER_WIDTH  8
 #define BORDER_HEIGHT 27
 
 static int write_mode;
@@ -195,7 +195,7 @@ static char_queue kbd_queue;
 
 //rajouté : queue pour les evenements clics de souris
 
-class eventmouse_queue { 
+class eventmouse_queue {
 private :
   int d_maxsize;
   int d_put,d_get;
@@ -228,43 +228,43 @@ inline int convert_userbits(DWORD buf[32], unsigned pattern)
     int i = 0, j;
     pattern &= 0xFFFF;
 
-    while (true) { 
+    while (true) {
 	for (j = 0; pattern & 1; j++) pattern >>= 1;
 	buf[i++] = j;
-	if (pattern == 0) { 
+	if (pattern == 0) {
 	    buf[i++] = 16 - j;
 	    return i;
 	}
 	for (j = 0; !(pattern & 1); j++) pattern >>= 1;
 	buf[i++] = j;
     }
-} 
+}
 
 
-class l2elem { 
-  public: 
+class l2elem {
+  public:
     l2elem* next;
     l2elem* prev;
 
-    void link_after(l2elem* after) { 
+    void link_after(l2elem* after) {
 	(next = after->next)->prev = this;
 	(prev = after)->next = this;
     }
-    void unlink() { 
+    void unlink() {
 	prev->next = next;
 	next->prev = prev;
     }
-    void prune() { 
+    void prune() {
 	next = prev = this;
     }
 };
 
-class l2list : public l2elem { 
+class l2list : public l2elem {
   public:
     l2list() { prune(); }
 };
 
-class pen_cache : public l2list { 
+class pen_cache : public l2list {
     class pen_cache_item : public l2elem {
       public:
     	HPEN pen;
@@ -272,64 +272,64 @@ class pen_cache : public l2list {
 	int  width;
 	int  style;
 	unsigned pattern;
-    };  
+    };
     pen_cache_item* free;
     pen_cache_item  cache[PEN_CACHE_SIZE];
 
-  public: 
-    pen_cache() { 
-	for (int i = 0; i < PEN_CACHE_SIZE-1; i++) { 
+  public:
+    pen_cache() {
+	for (int i = 0; i < PEN_CACHE_SIZE-1; i++) {
 	    cache[i].next = &cache[i+1];
 	}
 	cache[PEN_CACHE_SIZE-1].next = NULL;
 	free = cache;
     }
-    void select(int color) 
+    void select(int color)
     {
-	for (l2elem* elem = next; elem != this; elem = elem->next) { 
+	for (l2elem* elem = next; elem != this; elem = elem->next) {
 	    pen_cache_item* ci = (pen_cache_item*)elem;
 	    if (ci->color == color &&
 		ci->style == line_settings.linestyle &&
 		ci->width == line_settings.thickness &&
-		(line_settings.linestyle != USERBIT_LINE 
+		(line_settings.linestyle != USERBIT_LINE
 		 || line_settings.upattern == ci->pattern))
 	    {
 		ci->unlink(); // LRU discipline
-		ci->link_after(this); 
+		ci->link_after(this);
 
-		if (hPen != ci->pen) { 
+		if (hPen != ci->pen) {
 		    hPen = ci->pen;
 		    SelectObject(hdc[0], hPen);
 		    SelectObject(hdc[1], hPen);
 		}
-		return;	    
+		return;
 	    }
 	}
 	hPen = NULL;
-	if (line_settings.linestyle == USERBIT_LINE) { 
+	if (line_settings.linestyle == USERBIT_LINE) {
 	    LOGBRUSH lb;
 	    lb.lbColor = PALETTEINDEX(color);
 	    lb.lbStyle = BS_SOLID;
-	    DWORD style[32]; 
-	    hPen = ExtCreatePen(PS_GEOMETRIC|PS_USERSTYLE, 
-				line_settings.thickness, &lb, 
+	    DWORD style[32];
+	    hPen = ExtCreatePen(PS_GEOMETRIC|PS_USERSTYLE,
+				line_settings.thickness, &lb,
 				convert_userbits(style,line_settings.upattern),
 				style);
-	} 
-	if (hPen == NULL) { 
-	    hPen = CreatePen(line_style_cnv[line_settings.linestyle], 
-			     line_settings.thickness, 
+	}
+	if (hPen == NULL) {
+	    hPen = CreatePen(line_style_cnv[line_settings.linestyle],
+			     line_settings.thickness,
 			     PALETTEINDEX(color));
 	}
 	SelectObject(hdc[0], hPen);
 	SelectObject(hdc[1], hPen);
-	
+
 	pen_cache_item* p;
 	if (free == NULL) {
-	    p = (pen_cache_item*)prev; 
+	    p = (pen_cache_item*)prev;
 	    p->unlink();
-	    DeleteObject(p->pen);	    
-	} else { 
+	    DeleteObject(p->pen);
+	} else {
 	    p = free;
 	    free = (pen_cache_item*)p->next;
 	}
@@ -339,36 +339,36 @@ class pen_cache : public l2list {
 	p->style = line_settings.linestyle;
 	p->pattern = line_settings.upattern;
 	p->link_after(this);
-    }  
-};	
+    }
+};
 
 
 static pen_cache pcache;
 
 
 
-class font_cache : public l2list { 
+class font_cache : public l2list {
     class font_cache_item : public l2elem {
       public:
     	HFONT font;
         int   type;
 	int   direction;
 	int   width, height;
-    };  
+    };
     font_cache_item* free;
     font_cache_item  cache[FONT_CACHE_SIZE];
 
-  public: 
-    font_cache() { 
-	for (int i = 0; i < FONT_CACHE_SIZE-1; i++) { 
+  public:
+    font_cache() {
+	for (int i = 0; i < FONT_CACHE_SIZE-1; i++) {
 	    cache[i].next = &cache[i+1];
 	}
 	cache[FONT_CACHE_SIZE-1].next = NULL;
 	free = cache;
     }
-    void select(int type, int direction, int width, int height) 
+    void select(int type, int direction, int width, int height)
     {
-	for (l2elem* elem = next; elem != this; elem = elem->next) { 
+	for (l2elem* elem = next; elem != this; elem = elem->next) {
 	    font_cache_item* ci = (font_cache_item*)elem;
 	    if (ci->type == type &&
 		ci->direction == direction &&
@@ -378,12 +378,12 @@ class font_cache : public l2list {
 		ci->unlink();
 		ci->link_after(this);
 
-		if (hFont != ci->font) { 
+		if (hFont != ci->font) {
 		    hFont = ci->font;
 		    SelectObject(hdc[0], hFont);
 		    SelectObject(hdc[1], hFont);
 		}
-		return;	    
+		return;
 	    }
 	}
 	hFont = CreateFont(-height,
@@ -394,21 +394,21 @@ class font_cache : public l2list {
 			   FALSE,
 			   FALSE,
 			   FALSE,
-			   DEFAULT_CHARSET, 
+			   DEFAULT_CHARSET,
 			   OUT_DEFAULT_PRECIS,
 			   CLIP_DEFAULT_PRECIS,
 			   DEFAULT_QUALITY,
-			   font_family[type], 
+			   font_family[type],
 			   font_name[type]);
 	SelectObject(hdc[0], hFont);
 	SelectObject(hdc[1], hFont);
-	
+
 	font_cache_item* p;
 	if (free == NULL) {
-	    p = (font_cache_item*)prev; 
+	    p = (font_cache_item*)prev;
 	    p->unlink();
-	    DeleteObject(p->font);	    
-	} else { 
+	    DeleteObject(p->font);
+	} else {
 	    p = free;
 	    free = (font_cache_item*)p->next;
 	}
@@ -418,8 +418,8 @@ class font_cache : public l2list {
 	p->height = height;
 	p->direction = direction;
 	p->link_after(this);
-    }  
-};	
+    }
+};
 
 
 static font_cache fcache;
@@ -434,9 +434,9 @@ static PALETTEENTRY BGIcolor[16] = {
 { 0, 255, 0, FLAGS },
 { 0, 255, 255, FLAGS },
 { 255, 0, 0, FLAGS },
-{ 255, 0, 255, FLAGS }, 
+{ 255, 0, 255, FLAGS },
 { 165, 42, 42, FLAGS },
-{ 211, 211, 211, FLAGS }, 
+{ 211, 211, 211, FLAGS },
 { 47, 79, 79, FLAGS },
 { 173, 216, 230, FLAGS },
 { 32, 178, 170, FLAGS },
@@ -446,36 +446,36 @@ static PALETTEENTRY BGIcolor[16] = {
 { 255, 255, 0, FLAGS },
 { 255, 255, 255, FLAGS }
 };
-    
+
 static PALETTEENTRY BGIpalette[16];
 
-static short SolidBrushBitmap[8] = 
-  {~0xFF, ~0xFF, ~0xFF, ~0xFF, ~0xFF, ~0xFF, ~0xFF, ~0xFF};  
-static short LineBrushBitmap[8] = 
+static short SolidBrushBitmap[8] =
+  {~0xFF, ~0xFF, ~0xFF, ~0xFF, ~0xFF, ~0xFF, ~0xFF, ~0xFF};
+static short LineBrushBitmap[8] =
   {~0x00, ~0x00, ~0x00, ~0x00, ~0x00, ~0x00, ~0x00, ~0xFF};
-static short LtslashBrushBitmap[8] = 
+static short LtslashBrushBitmap[8] =
   {~0x01, ~0x02, ~0x04, ~0x08, ~0x10, ~0x20, ~0x40, ~0x80};
-static short SlashBrushBitmap[8] = 
+static short SlashBrushBitmap[8] =
   {~0x81, ~0x03, ~0x06, ~0x0C, ~0x18, ~0x30, ~0x60, ~0xC0};
-static short BkslashBrushBitmap[8] = 
+static short BkslashBrushBitmap[8] =
   {~0xC0, ~0x60, ~0x30, ~0x18, ~0x0C, ~0x06, ~0x03, ~0x81};
-static short LtbkslashBrushBitmap[8] = 
+static short LtbkslashBrushBitmap[8] =
   {~0x80, ~0x40, ~0x20, ~0x10, ~0x08, ~0x04, ~0x02, ~0x01};
-static short HatchBrushBitmap[8] = 
+static short HatchBrushBitmap[8] =
   {~0x01, ~0x01, ~0x01, ~0x01, ~0x01, ~0x01, ~0x01, ~0xFF};
-static short XhatchBrushBitmap[8] = 
+static short XhatchBrushBitmap[8] =
   {~0x81, ~0x42, ~0x24, ~0x18, ~0x18, ~0x24, ~0x42, ~0x81};
-static short InterleaveBrushBitmap[8] = 
+static short InterleaveBrushBitmap[8] =
   {~0x55, ~0xAA, ~0x55, ~0xAA, ~0x55, ~0xAA, ~0x55, ~0xAA};
-static short WidedotBrushBitmap[8] = 
+static short WidedotBrushBitmap[8] =
   {~0x00, ~0x00, ~0x00, ~0x00, ~0x00, ~0x00, ~0x00, ~0x01};
-static short ClosedotBrushBitmap[8] = 
+static short ClosedotBrushBitmap[8] =
   {~0x44, ~0x00, ~0x11, ~0x00, ~0x44, ~0x00, ~0x11, ~0x00};
-	
-char* grapherrormsg(int code) {	
+
+char* grapherrormsg(int code) {
     static char buf[256];
-    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, 
-    	          NULL, code, 0, 
+    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+    	          NULL, code, 0,
     	          buf, sizeof buf, NULL);
     return buf;
 }
@@ -484,7 +484,7 @@ static int gdi_error_code;
 
 int graphresult()
 {
-    return gdi_error_code; 
+    return gdi_error_code;
 }
 
 void setcolor(int c)
@@ -508,7 +508,7 @@ int getmaxmode()
 char* getmodename(int mode)
 {
     static char mode_str[32];
-    sprintf(mode_str, "%d x %d %s", window_width, window_height, 
+    sprintf(mode_str, "%d x %d %s", window_width, window_height,
 	    mode < 2 ? "EGA" : "VGA");
     return mode_str;
 }
@@ -572,7 +572,7 @@ void setpalette(int index, int color)
     current_palette.colors[index] = color;
     SetPaletteEntries(hPalette, BG+index, 1, &BGIpalette[index]);
     RealizePalette(hdc[0]);
-    if (index == 0) { 
+    if (index == 0) {
 	bkcolor = 0;
     }
 }
@@ -584,14 +584,14 @@ void setrgbpalette(int index, int red, int green, int blue)
     BGIpalette[index].peBlue = blue & 0xFC;
     SetPaletteEntries(hPalette, BG+index, 1, &BGIpalette[index]);
     RealizePalette(hdc[0]);
-    if (index == 0) { 
+    if (index == 0) {
 	bkcolor = 0;
     }
 }
 
 void setallpalette(palettetype* pal)
 {
-    for (int i = 0; i < pal->size; i++) { 
+    for (int i = 0; i < pal->size; i++) {
 	current_palette.colors[i] = pal->colors[i] & MAXCOLORS;
 	BGIpalette[i] = BGIcolor[pal->colors[i] & MAXCOLORS];
     }
@@ -603,7 +603,7 @@ void setallpalette(palettetype* pal)
 palettetype* getdefaultpalette()
 {
     static palettetype default_palette = { 16,
-      { BLACK, BLUE, GREEN, CYAN, RED, MAGENTA, BROWN, LIGHTGRAY, DARKGRAY, 
+      { BLACK, BLUE, GREEN, CYAN, RED, MAGENTA, BROWN, LIGHTGRAY, DARKGRAY,
         LIGHTBLUE, LIGHTGREEN, LIGHTCYAN, LIGHTRED, LIGHTMAGENTA, YELLOW, WHITE
       }};
     return &default_palette;
@@ -614,7 +614,7 @@ void getpalette(palettetype* pal)
     *pal = current_palette;
 }
 
-int getpalettesize() 
+int getpalettesize()
 {
     return MAXCOLORS+1;
 }
@@ -646,21 +646,21 @@ void getfillsettings(fillsettingstype* fs)
     *fs = fill_settings;
 }
 
-static fillpatterntype userfillpattern = 
+static fillpatterntype userfillpattern =
 {-1, -1, -1, -1, -1, -1, -1, -1};
 
 void setfillpattern(char const* upattern, int color)
 {
     static HBITMAP hFillBitmap;
     static short bitmap_data[8];
-    for (int i = 0; i < 8; i++) { 
+    for (int i = 0; i < 8; i++) {
 	bitmap_data[i] = (unsigned char)~upattern[i];
 	userfillpattern[i] = upattern[i];
     }
     HBITMAP h = CreateBitmap(8, 8, 1, 1, bitmap_data);
     HBRUSH hb = CreatePatternBrush(h);
     DeleteObject(hBrush[USER_FILL]);
-    if (hFillBitmap) { 
+    if (hFillBitmap) {
 	DeleteObject(hFillBitmap);
     }
     hFillBitmap = h;
@@ -679,7 +679,7 @@ void getfillpattern(fillpatterntype fp)
 
 inline void select_fill_color()
 {
-    if (text_color != fill_settings.color) { 
+    if (text_color != fill_settings.color) {
 	text_color = fill_settings.color;
 	SetTextColor(hdc[0], PALETTEINDEX(text_color+BG));
 	SetTextColor(hdc[1], PALETTEINDEX(text_color+BG));
@@ -697,12 +697,12 @@ void setusercharsize(int multx, int divx, int multy, int divy)
 
 void moveto(int x, int y)
 {
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
+    if (bgiemu_handle_redraw || visual_page != active_page) {
 	MoveToEx(hdc[1], x, y, NULL);
     }
-    if (visual_page == active_page) { 
+    if (visual_page == active_page) {
 	MoveToEx(hdc[0], x, y, NULL);
-    } 
+    }
 }
 
 void moverel(int dx, int dy)
@@ -714,41 +714,41 @@ void moverel(int dx, int dy)
 
 static void select_font()
 {
-    if (text_settings.charsize == 0) { 
-	fcache.select(text_settings.font, text_settings.direction, 
+    if (text_settings.charsize == 0) {
+	fcache.select(text_settings.font, text_settings.direction,
 		      font_metrics[text_settings.font]
 		                  [normal_font_size[text_settings.font]].width
 		                  *font_mul_x/font_div_x,
 		      font_metrics[text_settings.font]
 		                  [normal_font_size[text_settings.font]].height
-		                  *font_mul_y/font_div_y); 
-    } else { 
-	fcache.select(text_settings.font, text_settings.direction, 
+		                  *font_mul_y/font_div_y);
+    } else {
+	fcache.select(text_settings.font, text_settings.direction,
 	    font_metrics[text_settings.font][text_settings.charsize].width,
 	    font_metrics[text_settings.font][text_settings.charsize].height);
     }
 }
 
 static void text_output(int x, int y, const char* str)
-{ 
+{
     select_font();
-    if (text_color != color) { 
+    if (text_color != color) {
 	text_color = color;
 	SetTextColor(hdc[0], PALETTEINDEX(text_color+BG));
 	SetTextColor(hdc[1], PALETTEINDEX(text_color+BG));
     }
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
+    if (bgiemu_handle_redraw || visual_page != active_page) {
         TextOut(hdc[1], x, y, str, strlen(str));
     }
-    if (visual_page == active_page) { 
+    if (visual_page == active_page) {
         TextOut(hdc[0], x, y, str, strlen(str));
-    } 
+    }
 }
 
 
 void settextstyle(int font, int direction, int char_size)
 {
-    if (char_size > 10) { 
+    if (char_size > 10) {
 	char_size = 10;
     }
     text_settings.direction = direction;
@@ -791,13 +791,13 @@ void outtext(const char* str)
     if (text_align_mode != UPDATE_CP) {
 	text_align_mode = UPDATE_CP;
 	int align = (text_settings.direction == HORIZ_DIR)
-	            ? (TA_UPDATECP | 
-		       text_halign_cnv[text_settings.horiz] | 
+	            ? (TA_UPDATECP |
+		       text_halign_cnv[text_settings.horiz] |
 		       text_valign_cnv[text_settings.vert])
 	            : (TA_UPDATECP |
-		       text_valign_cnv[text_settings.horiz] | 
+		       text_valign_cnv[text_settings.horiz] |
 		       text_halign_cnv[text_settings.vert]);
-	SetTextAlign(hdc[0], align); 
+	SetTextAlign(hdc[0], align);
 	SetTextAlign(hdc[1], align);
     }
     text_output(0, 0, str);
@@ -808,11 +808,11 @@ void outtextxy(int x, int y, const char* str)
     if (text_align_mode != NOT_UPDATE_CP) {
 	text_align_mode = NOT_UPDATE_CP;
 	int align = (text_settings.direction == HORIZ_DIR)
-	            ? (TA_NOUPDATECP | 
-		       text_halign_cnv[text_settings.horiz] | 
+	            ? (TA_NOUPDATECP |
+		       text_halign_cnv[text_settings.horiz] |
 		       text_valign_cnv[text_settings.vert])
 	            : (TA_NOUPDATECP |
-		       text_valign_cnv[text_settings.horiz] | 
+		       text_valign_cnv[text_settings.horiz] |
 		       text_halign_cnv[text_settings.vert]);
 	SetTextAlign(hdc[0], align);
 	SetTextAlign(hdc[1], align);
@@ -828,7 +828,7 @@ void setviewport(int x1, int y1, int x2, int y2, int clip)
     view_settings.bottom = y2;
     view_settings.clip = clip;
 
-    if (hRgn) { 
+    if (hRgn) {
 	DeleteObject(hRgn);
     }
     hRgn = clip ? CreateRectRgn(x1, y1, x2, y2) : NULL;
@@ -837,7 +837,7 @@ void setviewport(int x1, int y1, int x2, int y2, int clip)
 
     SelectClipRgn(hdc[0], hRgn);
     SetViewportOrgEx(hdc[0], x1, y1, NULL);
-    
+
     moveto(0,0);
 }
 
@@ -849,19 +849,19 @@ void getviewsettings(viewporttype *viewport)
 const double pi = 3.14159265358979323846;
 
 inline void arc_coords(double angle, double rx, double ry, int& x, int& y)
-{ 
-    if (rx == 0 || ry == 0) { 
+{
+    if (rx == 0 || ry == 0) {
 	x = y = 0;
 	return;
     }
     double s = sin(angle*pi/180.0);
     double c = cos(angle*pi/180.0);
-    if (fabs(s) < fabs(c)) { 
+    if (fabs(s) < fabs(c)) {
 	double tg = s/c;
 	double xr = sqrt((double)rx*rx*ry*ry/(ry*ry+rx*rx*tg*tg));
 	x = int((c >= 0) ? xr : -xr);
 	y = int((s >= 0) ? -xr*tg : xr*tg);
-    } else { 
+    } else {
 	double ctg = c/s;
 	double yr = sqrt((double)rx*rx*ry*ry/(rx*rx+ry*ry*ctg*ctg));
         x = int((c >= 0) ? yr*ctg : -yr*ctg);
@@ -869,7 +869,7 @@ inline void arc_coords(double angle, double rx, double ry, int& x, int& y)
     }
 }
 
-void ellipse(int x, int y, int start_angle, int end_angle, 
+void ellipse(int x, int y, int start_angle, int end_angle,
 		       int rx, int ry)
 {
     ac.x = x;
@@ -879,26 +879,26 @@ void ellipse(int x, int y, int start_angle, int end_angle,
     ac.xstart += x; ac.ystart += y;
     ac.xend += x; ac.yend += y;
 
-    pcache.select(color+BG); 
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
-        Arc(hdc[1], x-rx, y-ry, x+rx, y+ry, 
-	    ac.xstart, ac.ystart, ac.xend, ac.yend); 
+    pcache.select(color+BG);
+    if (bgiemu_handle_redraw || visual_page != active_page) {
+        Arc(hdc[1], x-rx, y-ry, x+rx, y+ry,
+	    ac.xstart, ac.ystart, ac.xend, ac.yend);
     }
-    if (visual_page == active_page) { 
-	Arc(hdc[0], x-rx, y-ry, x+rx, y+ry, 
-	    ac.xstart, ac.ystart, ac.xend, ac.yend); 
+    if (visual_page == active_page) {
+	Arc(hdc[0], x-rx, y-ry, x+rx, y+ry,
+	    ac.xstart, ac.ystart, ac.xend, ac.yend);
     }
 }
 
 void fillellipse(int x, int y, int rx, int ry)
 {
-    pcache.select(color+BG); 
+    pcache.select(color+BG);
     select_fill_color();
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
-	Ellipse(hdc[1], x-rx, y-ry, x+rx, y+ry); 
+    if (bgiemu_handle_redraw || visual_page != active_page) {
+	Ellipse(hdc[1], x-rx, y-ry, x+rx, y+ry);
     }
-    if (visual_page == active_page) { 
-	Ellipse(hdc[0], x-rx, y-ry, x+rx, y+ry); 
+    if (visual_page == active_page) {
+	Ellipse(hdc[0], x-rx, y-ry, x+rx, y+ry);
     }
 }
 
@@ -906,11 +906,11 @@ static void allocate_new_graphic_page(int page)
 {
     RECT scr;
     scr.left = -view_settings.left;
-    scr.top = -view_settings.top; 
+    scr.top = -view_settings.top;
     scr.right = screen_width-view_settings.left-1;
     scr.bottom = screen_height-view_settings.top-1;
     hBitmap[page] = CreateCompatibleBitmap(hdc[0],screen_width,screen_height);
-    SelectObject(hdc[1], hBitmap[page]);	    
+    SelectObject(hdc[1], hBitmap[page]);
     SelectClipRgn(hdc[1], NULL);
     FillRect(hdc[1], &scr, hBackgroundBrush);
     SelectClipRgn(hdc[1], hRgn);
@@ -918,10 +918,10 @@ static void allocate_new_graphic_page(int page)
 
 void setactivepage(int page)
 {
-    if (hBitmap[page] == NULL) { 
+    if (hBitmap[page] == NULL) {
 	allocate_new_graphic_page(page);
-    } else { 
-	SelectObject(hdc[1], hBitmap[page]);	    
+    } else {
+	SelectObject(hdc[1], hBitmap[page]);
     }
     if (!bgiemu_handle_redraw && active_page == visual_page) {
 	POINT pos;
@@ -935,15 +935,15 @@ void setactivepage(int page)
 void setvisualpage(int page)
 {
     POINT pos;
-    if (hdc[page] == NULL) { 
+    if (hdc[page] == NULL) {
 	allocate_new_graphic_page(page);
     }
-    if (!bgiemu_handle_redraw && active_page == visual_page) { 
-	SelectObject(hdc[1], hBitmap[visual_page]);	    
+    if (!bgiemu_handle_redraw && active_page == visual_page) {
+	SelectObject(hdc[1], hBitmap[visual_page]);
 	SelectClipRgn(hdc[1], NULL);
-        BitBlt(hdc[1], -view_settings.left, -view_settings.top, 
-	       window_width, window_height, 
-	       hdc[0], -view_settings.left, -view_settings.top, 
+        BitBlt(hdc[1], -view_settings.left, -view_settings.top,
+	       window_width, window_height,
+	       hdc[0], -view_settings.left, -view_settings.top,
 	       SRCCOPY);
 	SelectClipRgn(hdc[1], hRgn);
 	GetCurrentPositionEx(hdc[0], &pos);
@@ -951,17 +951,17 @@ void setvisualpage(int page)
     }
     SelectClipRgn(hdc[0], NULL);
     SelectClipRgn(hdc[1], NULL);
-    SelectObject(hdc[1], hBitmap[page]);	    
-    BitBlt(hdc[0], -view_settings.left, 
-	   -view_settings.top, window_width, window_height, 
+    SelectObject(hdc[1], hBitmap[page]);
+    BitBlt(hdc[0], -view_settings.left,
+	   -view_settings.top, window_width, window_height,
 	   hdc[1], -view_settings.left, -view_settings.top, SRCCOPY);
     SelectClipRgn(hdc[0], hRgn);
     SelectClipRgn(hdc[1], hRgn);
 
-    if (page != active_page) { 
-	SelectObject(hdc[1], hBitmap[active_page]);	    
+    if (page != active_page) {
+	SelectObject(hdc[1], hBitmap[active_page]);
     }
-    if (active_page != visual_page) { 
+    if (active_page != visual_page) {
 	GetCurrentPositionEx(hdc[1], &pos);
 	MoveToEx(hdc[0], pos.x, pos.y, NULL);
     }
@@ -983,15 +983,15 @@ void getaspectratio(int* ax, int* ay)
 
 void circle(int x, int y, int radius)
 {
-    pcache.select(color+BG); 
+    pcache.select(color+BG);
     int ry = (unsigned)radius*aspect_ratio_x/aspect_ratio_y;
     int rx = radius;
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
+    if (bgiemu_handle_redraw || visual_page != active_page) {
 	Arc(hdc[1], x-rx, y-ry, x+rx, y+ry, x+rx, y, x+rx, y);
     }
-    if (visual_page == active_page) { 
+    if (visual_page == active_page) {
         Arc(hdc[0], x-rx, y-ry, x+rx, y+ry, x+rx, y, x+rx, y);
-    }    
+    }
 }
 
 void arc(int x, int y, int start_angle, int end_angle, int radius)
@@ -1003,12 +1003,12 @@ void arc(int x, int y, int start_angle, int end_angle, int radius)
     ac.xend = x + int(radius*cos(end_angle*pi/180.0));
     ac.yend = y - int(radius*sin(end_angle*pi/180.0));
 
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
-        Arc(hdc[1], x-radius, y-radius, x+radius, y+radius, 
+    if (bgiemu_handle_redraw || visual_page != active_page) {
+        Arc(hdc[1], x-radius, y-radius, x+radius, y+radius,
 	ac.xstart, ac.ystart, ac.xend, ac.yend);
     }
-    if (visual_page == active_page) { 
-	Arc(hdc[0], x-radius, y-radius, x+radius, y+radius, 
+    if (visual_page == active_page) {
+	Arc(hdc[0], x-radius, y-radius, x+radius, y+radius,
 	    ac.xstart, ac.ystart, ac.xend, ac.yend);
     }
 }
@@ -1018,10 +1018,10 @@ void getarccoords(arccoordstype *arccoords)
     *arccoords = ac;
 }
 
-void pieslice(int x, int y, int start_angle, int end_angle, 
+void pieslice(int x, int y, int start_angle, int end_angle,
 	      int radius)
 {
-    pcache.select(color+BG); 
+    pcache.select(color+BG);
     select_fill_color();
     ac.x = x;
     ac.y = y;
@@ -1030,18 +1030,18 @@ void pieslice(int x, int y, int start_angle, int end_angle,
     ac.xend = x + int(radius*cos(end_angle*pi/180.0));
     ac.yend = y - int(radius*sin(end_angle*pi/180.0));
 
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
-	Pie(hdc[1], x-radius, y-radius, x+radius, y+radius, 
-	    ac.xstart, ac.ystart, ac.xend, ac.yend); 
+    if (bgiemu_handle_redraw || visual_page != active_page) {
+	Pie(hdc[1], x-radius, y-radius, x+radius, y+radius,
+	    ac.xstart, ac.ystart, ac.xend, ac.yend);
     }
-    if (visual_page == active_page) { 
-	Pie(hdc[0], x-radius, y-radius, x+radius, y+radius, 
-    	    ac.xstart, ac.ystart, ac.xend, ac.yend); 
+    if (visual_page == active_page) {
+	Pie(hdc[0], x-radius, y-radius, x+radius, y+radius,
+    	    ac.xstart, ac.ystart, ac.xend, ac.yend);
     }
 }
 
 
-void sector(int x, int y, int start_angle, int end_angle, 
+void sector(int x, int y, int start_angle, int end_angle,
 		      int rx, int ry)
 {
     ac.x = x;
@@ -1051,28 +1051,28 @@ void sector(int x, int y, int start_angle, int end_angle,
     ac.xstart += x; ac.ystart += y;
     ac.xend += x; ac.yend += y;
 
-    pcache.select(color+BG); 
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
-        Pie(hdc[1], x-rx, y-ry, x+rx, y+ry, 
-	    ac.xstart, ac.ystart, ac.xend, ac.yend); 
+    pcache.select(color+BG);
+    if (bgiemu_handle_redraw || visual_page != active_page) {
+        Pie(hdc[1], x-rx, y-ry, x+rx, y+ry,
+	    ac.xstart, ac.ystart, ac.xend, ac.yend);
     }
-    if (visual_page == active_page) { 
-	Pie(hdc[0], x-rx, y-ry, x+rx, y+ry, 
-    	    ac.xstart, ac.ystart, ac.xend, ac.yend); 
+    if (visual_page == active_page) {
+	Pie(hdc[0], x-rx, y-ry, x+rx, y+ry,
+    	    ac.xstart, ac.ystart, ac.xend, ac.yend);
     }
 }
 
 void bar(int left, int top, int right, int bottom)
 {
     RECT r;
-    if (left > right) {	/* Turbo C corrects for badly ordered corners */   
+    if (left > right) {	/* Turbo C corrects for badly ordered corners */
 	r.left = right;
 	r.right = left;
     } else {
 	r.left = left;
 	r.right = right;
     }
-    if (bottom < top) {	/* Turbo C corrects for badly ordered corners */   
+    if (bottom < top) {	/* Turbo C corrects for badly ordered corners */
 	r.top = bottom;
 	r.bottom = top;
     } else {
@@ -1080,10 +1080,10 @@ void bar(int left, int top, int right, int bottom)
 	r.bottom = bottom;
     }
     select_fill_color();
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
+    if (bgiemu_handle_redraw || visual_page != active_page) {
 	FillRect(hdc[1], &r, hBrush[fill_settings.pattern]);
     }
-    if (visual_page == active_page) { 
+    if (visual_page == active_page) {
 	FillRect(hdc[0], &r, hBrush[fill_settings.pattern]);
     }
 }
@@ -1103,13 +1103,13 @@ void bar3d(int left, int top, int right, int bottom, int depth, int topflag)
 	bottom = top;
 	top = temp;
     }
-    bar(left+line_settings.thickness, top+line_settings.thickness, 
+    bar(left+line_settings.thickness, top+line_settings.thickness,
 	right-line_settings.thickness+1, bottom-line_settings.thickness+1);
 
-    if (write_mode != COPY_PUT) { 
+    if (write_mode != COPY_PUT) {
 	SetROP2(hdc[0], write_mode_cnv[write_mode]);
 	SetROP2(hdc[1], write_mode_cnv[write_mode]);
-    } 
+    }
     pcache.select(ADJUSTED_MODE(write_mode) ? color : color + BG);
     int dy = int(depth*tan30);
     POINT p[11];
@@ -1122,18 +1122,18 @@ void bar3d(int left, int top, int right, int bottom, int depth, int topflag)
     p[6].x = right+depth, p[6].y = top-dy;
     p[7].x = right, p[7].y = top;
 
-    if (topflag) { 
+    if (topflag) {
 	p[8].x = right+depth, p[8].y = top-dy;
 	p[9].x = left+depth, p[9].y = top-dy;
-	p[10].x = left, p[10].y = top;	
+	p[10].x = left, p[10].y = top;
     }
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
+    if (bgiemu_handle_redraw || visual_page != active_page) {
 	Polyline(hdc[1], p, topflag ? 11 : 8);
     }
-    if (visual_page == active_page) { 
+    if (visual_page == active_page) {
 	Polyline(hdc[0], p, topflag ? 11 : 8);
     }
-    if (write_mode != COPY_PUT) { 
+    if (write_mode != COPY_PUT) {
 	SetROP2(hdc[0], R2_COPYPEN);
 	SetROP2(hdc[1], R2_COPYPEN);
     }
@@ -1141,18 +1141,18 @@ void bar3d(int left, int top, int right, int bottom, int depth, int topflag)
 
 void lineto(int x, int y)
 {
-    if (write_mode != COPY_PUT) { 
+    if (write_mode != COPY_PUT) {
 	SetROP2(hdc[0], write_mode_cnv[write_mode]);
 	SetROP2(hdc[1], write_mode_cnv[write_mode]);
-    } 
+    }
     pcache.select(ADJUSTED_MODE(write_mode) ? color : color + BG);
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
+    if (bgiemu_handle_redraw || visual_page != active_page) {
 	LineTo(hdc[1], x, y);
     }
-    if (visual_page == active_page) { 
+    if (visual_page == active_page) {
 	LineTo(hdc[0], x, y);
     }
-    if (write_mode != COPY_PUT) { 
+    if (write_mode != COPY_PUT) {
 	SetROP2(hdc[0], R2_COPYPEN);
 	SetROP2(hdc[1], R2_COPYPEN);
     }
@@ -1165,22 +1165,22 @@ void linerel(int dx, int dy)
     lineto(pos.x + dx, pos.y + dy);
 }
 
-void drawpoly(int n_points, int* points) 
-{ 
-    if (write_mode != COPY_PUT) { 
+void drawpoly(int n_points, int* points)
+{
+    if (write_mode != COPY_PUT) {
 	SetROP2(hdc[0], write_mode_cnv[write_mode]);
 	SetROP2(hdc[1], write_mode_cnv[write_mode]);
-    } 
+    }
     pcache.select(ADJUSTED_MODE(write_mode) ? color : color + BG);
 
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
+    if (bgiemu_handle_redraw || visual_page != active_page) {
 	Polyline(hdc[1], (POINT*)points, n_points);
     }
-    if (visual_page == active_page) { 
+    if (visual_page == active_page) {
 	Polyline(hdc[0], (POINT*)points, n_points);
     }
 
-    if (write_mode != COPY_PUT) { 
+    if (write_mode != COPY_PUT) {
 	SetROP2(hdc[0], R2_COPYPEN);
 	SetROP2(hdc[1], R2_COPYPEN);
     }
@@ -1205,16 +1205,16 @@ void rectangle(int left, int top, int right, int bottom)
     rect[3].x = left, rect[3].y = bottom;
     rect[4].x = left, rect[4].y = top;
     drawpoly(5, (int*)&rect);
-}   
-    
+}
+
 void fillpoly(int n_points, int* points)
 {
     pcache.select(color+BG);
     select_fill_color();
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
+    if (bgiemu_handle_redraw || visual_page != active_page) {
         Polygon(hdc[1], (POINT*)points, n_points);
     }
-    if (visual_page == active_page) { 
+    if (visual_page == active_page) {
 	Polygon(hdc[0], (POINT*)points, n_points);
     }
 }
@@ -1222,21 +1222,21 @@ void fillpoly(int n_points, int* points)
 void floodfill(int x, int y, int border)
 {
     select_fill_color();
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
+    if (bgiemu_handle_redraw || visual_page != active_page) {
 	FloodFill(hdc[1], x, y, PALETTEINDEX(border+BG));
     }
-    if (visual_page == active_page) { 
+    if (visual_page == active_page) {
 	FloodFill(hdc[0], x, y, PALETTEINDEX(border+BG));
-    } 
+    }
 }
 
 
-    
+
 static bool handle_input(bool wait = false)
 {
     MSG lpMsg;
-    if (wait ? GetMessage(&lpMsg, NULL, 0, 0) 
-	     : PeekMessage(&lpMsg, NULL, 0, 0, PM_REMOVE)) 
+    if (wait ? GetMessage(&lpMsg, NULL, 0, 0)
+	     : PeekMessage(&lpMsg, NULL, 0, 0, PM_REMOVE))
     {
 	TranslateMessage(&lpMsg);
 	DispatchMessage(&lpMsg);
@@ -1249,10 +1249,10 @@ static bool handle_input(bool wait = false)
 void delay(unsigned msec)
 {
     timeout_expired = false;
-    SetTimer(hWnd, TIMER_ID, msec, NULL); 
+    SetTimer(hWnd, TIMER_ID, msec, NULL);
     while (!timeout_expired) handle_input(true);
 }
-    
+
 
 int kbhit()
 {
@@ -1316,28 +1316,28 @@ int buttonpressed()
 }
 
 void cleardevice()
-{	    
+{
     RECT scr;
     scr.left = -view_settings.left;
-    scr.top = -view_settings.top; 
+    scr.top = -view_settings.top;
     scr.right = screen_width-view_settings.left-1;
     scr.bottom = screen_height-view_settings.top-1;
 
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
-	if (hRgn != NULL) { 
+    if (bgiemu_handle_redraw || visual_page != active_page) {
+	if (hRgn != NULL) {
 	    SelectClipRgn(hdc[1], NULL);
 	}
 	FillRect(hdc[1], &scr, hBackgroundBrush);
-	if (hRgn != NULL) { 
+	if (hRgn != NULL) {
 	    SelectClipRgn(hdc[1], hRgn);
 	}
     }
-    if (visual_page == active_page) { 
-	if (hRgn != NULL) { 
+    if (visual_page == active_page) {
+	if (hRgn != NULL) {
 	    SelectClipRgn(hdc[0], NULL);
 	}
 	FillRect(hdc[0], &scr, hBackgroundBrush);
-	if (hRgn != NULL) { 
+	if (hRgn != NULL) {
 	    SelectClipRgn(hdc[0], hRgn);
 	}
     }
@@ -1348,13 +1348,13 @@ void clearviewport()
 {
     RECT scr;
     scr.left = 0;
-    scr.top = 0; 
+    scr.top = 0;
     scr.right = view_settings.right-view_settings.left;
     scr.bottom = view_settings.bottom-view_settings.top;
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
+    if (bgiemu_handle_redraw || visual_page != active_page) {
         FillRect(hdc[1], &scr, hBackgroundBrush);
     }
-    if (visual_page == active_page) { 
+    if (visual_page == active_page) {
 	FillRect(hdc[0], &scr, hBackgroundBrush);
     }
     moveto(0,0);
@@ -1381,59 +1381,59 @@ void putimage(int x, int y, void* image, int bitblt)
     if (hPutimageBitmap == NULL ||
 	putimage_width < bi->width || putimage_height < bi->height)
     {
-	if (putimage_width < bi->width) { 
+	if (putimage_width < bi->width) {
 	    putimage_width = (bi->width+7) & ~7;
 	}
-	if (putimage_height < bi->height) { 
+	if (putimage_height < bi->height) {
 	    putimage_height = bi->height;
 	}
-	HBITMAP h = CreateCompatibleBitmap(hdc[0], putimage_width, 
+	HBITMAP h = CreateCompatibleBitmap(hdc[0], putimage_width,
 					   putimage_height);
 	SelectObject(hdc[2], h);
-	if (hPutimageBitmap) { 
+	if (hPutimageBitmap) {
 	    DeleteObject(hPutimageBitmap);
 	}
 	hPutimageBitmap = h;
     }
     int mask = ADJUSTED_MODE(bitblt) ? 0 : BG;
-    for (int i = 0; i <= MAXCOLORS; i++) { 
+    for (int i = 0; i <= MAXCOLORS; i++) {
 	bminfo.color_table[i] = i + mask;
     }
-    bminfo.hdr.biHeight = bi->height; 
-    bminfo.hdr.biWidth = bi->width; 
-    SetDIBits(hdc[2], hPutimageBitmap, 0, bi->height, bi->bits, 
+    bminfo.hdr.biHeight = bi->height;
+    bminfo.hdr.biWidth = bi->width;
+    SetDIBits(hdc[2], hPutimageBitmap, 0, bi->height, bi->bits,
 	      (BITMAPINFO*)&bminfo, DIB_PAL_COLORS);
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
-	BitBlt(hdc[1], x, y, bi->width, bi->height, hdc[2], 0, 0, 
+    if (bgiemu_handle_redraw || visual_page != active_page) {
+	BitBlt(hdc[1], x, y, bi->width, bi->height, hdc[2], 0, 0,
 	       bitblt_mode_cnv[bitblt]);
     }
-    if (visual_page == active_page) { 
-        BitBlt(hdc[0], x, y, bi->width, bi->height, hdc[2], 0, 0, 
+    if (visual_page == active_page) {
+        BitBlt(hdc[0], x, y, bi->width, bi->height, hdc[2], 0, 0,
 	       bitblt_mode_cnv[bitblt]);
     }
 }
 
 unsigned int imagesize(int x1, int y1, int x2, int y2)
 {
-    return 8 + (((x2-x1+8) & ~7) >> 1)*(y2-y1+1); 
+    return 8 + (((x2-x1+8) & ~7) >> 1)*(y2-y1+1);
 }
 
 void getimage(int x1, int y1, int x2, int y2, void* image)
 {
     BGIimage* bi = (BGIimage*)image;
-    int* image_bits; 
+    int* image_bits;
     bi->width = x2-x1+1;
     bi->height = y2-y1+1;
-    bminfo.hdr.biHeight = bi->height; 
-    bminfo.hdr.biWidth = bi->width; 
-    for (int i = 0; i <= MAXCOLORS; i++) { 
+    bminfo.hdr.biHeight = bi->height;
+    bminfo.hdr.biWidth = bi->width;
+    for (int i = 0; i <= MAXCOLORS; i++) {
 	bminfo.color_table[i] = i + BG;
     }
-    HBITMAP hb = CreateDIBSection(hdc[3], (BITMAPINFO*)&bminfo, 
-	DIB_PAL_COLORS, (void**)&image_bits, 0, 0); 
+    HBITMAP hb = CreateDIBSection(hdc[3], (BITMAPINFO*)&bminfo,
+	DIB_PAL_COLORS, (void**)&image_bits, 0, 0);
     HBITMAP hdb = (HBITMAP)SelectObject(hdc[3], hb);
-    BitBlt(hdc[3], 0, 0, bi->width, bi->height, 
-	   hdc[visual_page != active_page || bgiemu_handle_redraw ? 1 : 0], 
+    BitBlt(hdc[3], 0, 0, bi->width, bi->height,
+	   hdc[visual_page != active_page || bgiemu_handle_redraw ? 1 : 0],
 	   x1, y1, SRCCOPY);
     GdiFlush();
     memcpy(bi->bits, image_bits, (((bi->width+7) & ~7) >> 1)*bi->height);
@@ -1442,18 +1442,18 @@ void getimage(int x1, int y1, int x2, int y2, void* image)
 }
 
 unsigned int getpixel(int x, int y)
-{ 
+{
     int color;
-    COLORREF rgb = GetPixel(hdc[visual_page != active_page 
+    COLORREF rgb = GetPixel(hdc[visual_page != active_page
 			       || bgiemu_handle_redraw ? 1 : 0], x, y);
 
-    if (rgb == CLR_INVALID) { 
+    if (rgb == CLR_INVALID) {
 	return -1;
     }
     int red = GetRValue(rgb);
     int blue = GetBValue(rgb);
     int green = GetGValue(rgb);
-    for (color = 0; color <= MAXCOLORS; color++) { 
+    for (color = 0; color <= MAXCOLORS; color++) {
 	if (BGIpalette[color].peRed == red &&
 	    BGIpalette[color].peGreen == green &&
 	    BGIpalette[color].peBlue == blue)
@@ -1463,27 +1463,27 @@ unsigned int getpixel(int x, int y)
     }
     return -1;
 }
-    	    
+
 void putpixel(int x, int y, int c)
 {
     c &= MAXCOLORS;
-    if (bgiemu_handle_redraw || visual_page != active_page) { 
+    if (bgiemu_handle_redraw || visual_page != active_page) {
 	SetPixel(hdc[1], x, y, PALETTEINDEX(c+BG));
     }
-    if (visual_page == active_page) { 
+    if (visual_page == active_page) {
 	SetPixel(hdc[0], x, y, PALETTEINDEX(c+BG));
     }
 }
 
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT messg, 
+LRESULT CALLBACK WndProc(HWND hWnd, UINT messg,
 			 WPARAM wParam, LPARAM lParam)
 {
     int i;
     static bool palette_changed = false;
 
-    switch (messg) { 
-      case WM_PAINT: 
+    switch (messg) {
+      case WM_PAINT:
 	if (hdc[0] == 0) {
 	    hdc[0] = BeginPaint(hWnd, &ps);
             SelectPalette(hdc[0], hPalette, FALSE);
@@ -1497,9 +1497,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT messg,
 
 	    screen_width = GetDeviceCaps(hdc[0], HORZRES);
 	    screen_height = GetDeviceCaps(hdc[0], VERTRES);
-	    hBitmap[active_page] = 
+	    hBitmap[active_page] =
 		CreateCompatibleBitmap(hdc[0], screen_width, screen_height);
-	    SelectObject(hdc[1], hBitmap[active_page]);	    
+	    SelectObject(hdc[1], hBitmap[active_page]);
 
 	    SetTextColor(hdc[0], PALETTEINDEX(text_color+BG));
 	    SetTextColor(hdc[1], PALETTEINDEX(text_color+BG));
@@ -1511,31 +1511,31 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT messg,
 
 	    RECT scr;
 	    scr.left = -view_settings.left;
-	    scr.top = -view_settings.top; 
+	    scr.top = -view_settings.top;
 	    scr.right = screen_width-view_settings.left-1;
 	    scr.bottom = screen_height-view_settings.top-1;
 	    FillRect(hdc[1], &scr, hBackgroundBrush);
 	}
-	if (hRgn != NULL) { 
+	if (hRgn != NULL) {
 	    SelectClipRgn(hdc[0], NULL);
 	}
-	if (visual_page != active_page) { 
-	    SelectObject(hdc[1], hBitmap[visual_page]); 
-	} 
-        BitBlt(hdc[0], -view_settings.left, 
-	       -view_settings.top, window_width, window_height, 
-	       hdc[1], -view_settings.left, -view_settings.top, 
+	if (visual_page != active_page) {
+	    SelectObject(hdc[1], hBitmap[visual_page]);
+	}
+        BitBlt(hdc[0], -view_settings.left,
+	       -view_settings.top, window_width, window_height,
+	       hdc[1], -view_settings.left, -view_settings.top,
 	       SRCCOPY);
-	if (hRgn != NULL) { 
+	if (hRgn != NULL) {
 	    SelectClipRgn(hdc[0], hRgn);
 	}
-	if (visual_page != active_page) { 
-	    SelectObject(hdc[1], hBitmap[active_page]); 
-	} 
+	if (visual_page != active_page) {
+	    SelectObject(hdc[1], hBitmap[active_page]);
+	}
 	ValidateRect(hWnd, NULL);
 	break;
       case WM_SETFOCUS:
-	if (palette_changed) { 
+	if (palette_changed) {
 	    HPALETTE new_palette = CreatePalette(pPalette);
 	    SelectPalette(hdc[0], new_palette, FALSE);
 	    RealizePalette(hdc[0]);
@@ -1547,22 +1547,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT messg,
 	    palette_changed = false;
 	}
 	break;
-      case WM_PALETTECHANGED: 
+      case WM_PALETTECHANGED:
 	RealizePalette(hdc[0]);
 	UpdateColors(hdc[0]);
 	palette_changed = true;
 	break;
-      case WM_DESTROY: 
+      case WM_DESTROY:
         EndPaint(hWnd, &ps);
 	hdc[0] = 0;
 	DeleteObject(hdc[1]);
 	DeleteObject(hdc[2]);
 	DeleteObject(hdc[3]);
-	if (hPutimageBitmap) { 
+	if (hPutimageBitmap) {
 	    DeleteObject(hPutimageBitmap);
 	    hPutimageBitmap = NULL;
 	}
-	for (i = 0; i < MAX_PAGES; i++) { 
+	for (i = 0; i < MAX_PAGES; i++) {
 	    if (hBitmap[i] != NULL) {
 		DeleteObject(hBitmap[i]);
 		hBitmap[i] = 0;
@@ -1572,7 +1572,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT messg,
 	hPalette = 0;
 	PostQuitMessage(0);
 	break;
-      case WM_SIZE: 
+      case WM_SIZE:
 	window_width = LOWORD(lParam);
 	window_height = HIWORD(lParam);
 	break;
@@ -1702,7 +1702,7 @@ static void detect_mode(int* gd, int* gm)
     default:
       case DETECT:
 	    *gd = VGA;
-	    *gm = bgiemu_default_mode;		   
+	    *gm = bgiemu_default_mode;
       case VGA:
         window_width = 640;
         switch (*gm) {
@@ -1739,8 +1739,8 @@ static void detect_mode(int* gd, int* gm)
 	        window_height = 768;
 	        break;
 		}
-	    break;	
-    } 
+	    break;
+    }
 }
 
 static void set_defaults()
@@ -1762,12 +1762,12 @@ static void set_defaults()
     text_align_mode = ALIGN_NOT_SET;
 
     active_page = visual_page = 0;
-    
+
     view_settings.left = 0;
     view_settings.top = 0;
     view_settings.right = window_width-1;
     view_settings.bottom = window_height-1;
-    
+
     aspect_ratio_x = aspect_ratio_y = 10000;
 }
 
@@ -1779,7 +1779,7 @@ void initgraph(int* device, int* mode, char const* /*pathtodriver*/)
 
     gdi_error_code = grOk;
 
-    if (wcApp.lpszClassName == NULL) { 
+    if (wcApp.lpszClassName == NULL) {
 	wcApp.lpszClassName = "BGIlibrary";
 	wcApp.hInstance = 0;
 	wcApp.lpfnWndProc = WndProc;
@@ -1790,50 +1790,50 @@ void initgraph(int* device, int* mode, char const* /*pathtodriver*/)
 	wcApp.style = CS_SAVEBITS;
 	wcApp.cbClsExtra = 0;
 	wcApp.cbWndExtra = 0;
-	
-	if (!RegisterClass(&wcApp)) { 
+
+	if (!RegisterClass(&wcApp)) {
 	    gdi_error_code = GetLastError();
 	    return;
 	}
-	
+
 	pPalette = (NPLOGPALETTE)LocalAlloc(LMEM_FIXED,
 	    sizeof(LOGPALETTE)+sizeof(PALETTEENTRY)*PALETTE_SIZE);
-	
+
 	pPalette->palVersion = 0x300;
 	pPalette->palNumEntries = PALETTE_SIZE;
-	memset(pPalette->palPalEntry, 0, sizeof(PALETTEENTRY)*PALETTE_SIZE); 
+	memset(pPalette->palPalEntry, 0, sizeof(PALETTEENTRY)*PALETTE_SIZE);
 	for (index = 0; index < BG; index++) {
 	    pPalette->palPalEntry[index].peFlags = PC_EXPLICIT;
 	    pPalette->palPalEntry[index].peRed = index;
 	    pPalette->palPalEntry[PALETTE_SIZE-BG+index].peFlags = PC_EXPLICIT;
-	    pPalette->palPalEntry[PALETTE_SIZE-BG+index].peRed = 
+	    pPalette->palPalEntry[PALETTE_SIZE-BG+index].peRed =
 		PALETTE_SIZE-BG+index;
-	}		
+	}
 	hBackgroundBrush = CreateSolidBrush(PALETTEINDEX(BG));
 	hBrush[EMPTY_FILL] = (HBRUSH)GetStockObject(NULL_BRUSH);
-	hBrush[SOLID_FILL] = 
+	hBrush[SOLID_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, SolidBrushBitmap));
-	hBrush[LINE_FILL] = 
+	hBrush[LINE_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, LineBrushBitmap));
-	hBrush[LTSLASH_FILL] = 
+	hBrush[LTSLASH_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, LtslashBrushBitmap));
-	hBrush[SLASH_FILL] = 
+	hBrush[SLASH_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, SlashBrushBitmap));
-	hBrush[BKSLASH_FILL] = 
+	hBrush[BKSLASH_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, BkslashBrushBitmap));
-	hBrush[LTBKSLASH_FILL] = 
+	hBrush[LTBKSLASH_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, LtbkslashBrushBitmap));
-	hBrush[HATCH_FILL] = 
+	hBrush[HATCH_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, HatchBrushBitmap));
-	hBrush[XHATCH_FILL] = 
+	hBrush[XHATCH_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, XhatchBrushBitmap));
-	hBrush[INTERLEAVE_FILL] = 
+	hBrush[INTERLEAVE_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, InterleaveBrushBitmap));
-	hBrush[WIDE_DOT_FILL] = 
+	hBrush[WIDE_DOT_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, WidedotBrushBitmap));
-	hBrush[CLOSE_DOT_FILL] = 
+	hBrush[CLOSE_DOT_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, ClosedotBrushBitmap));
-	hBrush[USER_FILL] = 
+	hBrush[USER_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, SolidBrushBitmap));
     }
     memcpy(BGIpalette, BGIcolor, sizeof BGIpalette);
@@ -1849,13 +1849,13 @@ void initgraph(int* device, int* mode, char const* /*pathtodriver*/)
     detect_mode(device, mode);
     set_defaults();
 
-    hWnd = CreateWindow("BGIlibrary", "Windows BGI", 
+    hWnd = CreateWindow("BGIlibrary", "Windows BGI",
 			WS_OVERLAPPEDWINDOW,
-		        0, 0, window_width+BORDER_WIDTH, 
+		        0, 0, window_width+BORDER_WIDTH,
 			window_height+BORDER_HEIGHT,
 			(HWND)NULL,  (HMENU)NULL,
 	    		0, NULL);
-    if (hWnd == NULL) { 
+    if (hWnd == NULL) {
 	gdi_error_code = GetLastError();
 	return;
     }
@@ -1873,7 +1873,7 @@ void initgraphsize(int width,int height)
 
     gdi_error_code = grOk;
 
-    if (wcApp.lpszClassName == NULL) { 
+    if (wcApp.lpszClassName == NULL) {
 	wcApp.lpszClassName = "BGIlibrary";
 	wcApp.hInstance = 0;
 	wcApp.lpfnWndProc = WndProc;
@@ -1884,50 +1884,50 @@ void initgraphsize(int width,int height)
 	wcApp.style = CS_SAVEBITS;
 	wcApp.cbClsExtra = 0;
 	wcApp.cbWndExtra = 0;
-	
-	if (!RegisterClass(&wcApp)) { 
+
+	if (!RegisterClass(&wcApp)) {
 	    gdi_error_code = GetLastError();
 	    return;
 	}
-	
+
 	pPalette = (NPLOGPALETTE)LocalAlloc(LMEM_FIXED,
 	    sizeof(LOGPALETTE)+sizeof(PALETTEENTRY)*PALETTE_SIZE);
-	
+
 	pPalette->palVersion = 0x300;
 	pPalette->palNumEntries = PALETTE_SIZE;
-	memset(pPalette->palPalEntry, 0, sizeof(PALETTEENTRY)*PALETTE_SIZE); 
+	memset(pPalette->palPalEntry, 0, sizeof(PALETTEENTRY)*PALETTE_SIZE);
 	for (index = 0; index < BG; index++) {
 	    pPalette->palPalEntry[index].peFlags = PC_EXPLICIT;
 	    pPalette->palPalEntry[index].peRed = index;
 	    pPalette->palPalEntry[PALETTE_SIZE-BG+index].peFlags = PC_EXPLICIT;
-	    pPalette->palPalEntry[PALETTE_SIZE-BG+index].peRed = 
+	    pPalette->palPalEntry[PALETTE_SIZE-BG+index].peRed =
 		PALETTE_SIZE-BG+index;
-	}		
+	}
 	hBackgroundBrush = CreateSolidBrush(PALETTEINDEX(BG));
 	hBrush[EMPTY_FILL] = (HBRUSH)GetStockObject(NULL_BRUSH);
-	hBrush[SOLID_FILL] = 
+	hBrush[SOLID_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, SolidBrushBitmap));
-	hBrush[LINE_FILL] = 
+	hBrush[LINE_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, LineBrushBitmap));
-	hBrush[LTSLASH_FILL] = 
+	hBrush[LTSLASH_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, LtslashBrushBitmap));
-	hBrush[SLASH_FILL] = 
+	hBrush[SLASH_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, SlashBrushBitmap));
-	hBrush[BKSLASH_FILL] = 
+	hBrush[BKSLASH_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, BkslashBrushBitmap));
-	hBrush[LTBKSLASH_FILL] = 
+	hBrush[LTBKSLASH_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, LtbkslashBrushBitmap));
-	hBrush[HATCH_FILL] = 
+	hBrush[HATCH_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, HatchBrushBitmap));
-	hBrush[XHATCH_FILL] = 
+	hBrush[XHATCH_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, XhatchBrushBitmap));
-	hBrush[INTERLEAVE_FILL] = 
+	hBrush[INTERLEAVE_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, InterleaveBrushBitmap));
-	hBrush[WIDE_DOT_FILL] = 
+	hBrush[WIDE_DOT_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, WidedotBrushBitmap));
-	hBrush[CLOSE_DOT_FILL] = 
+	hBrush[CLOSE_DOT_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, ClosedotBrushBitmap));
-	hBrush[USER_FILL] = 
+	hBrush[USER_FILL] =
 	    CreatePatternBrush(CreateBitmap(8, 8, 1, 1, SolidBrushBitmap));
     }
     memcpy(BGIpalette, BGIcolor, sizeof BGIpalette);
@@ -1948,13 +1948,13 @@ void initgraphsize(int width,int height)
 	window_height=height;
     set_defaults();
 
-    hWnd = CreateWindow("BGIlibrary", "Windows BGI", 
+    hWnd = CreateWindow("BGIlibrary", "Windows BGI",
 			WS_OVERLAPPEDWINDOW,
-		        0, 0, window_width+BORDER_WIDTH, 
+		        0, 0, window_width+BORDER_WIDTH,
 			window_height+BORDER_HEIGHT,
 			(HWND)NULL,  (HMENU)NULL,
 	    		0, NULL);
-    if (hWnd == NULL) { 
+    if (hWnd == NULL) {
 	gdi_error_code = GetLastError();
 	return;
     }
@@ -1967,7 +1967,7 @@ void graphdefaults()
 {
     set_defaults();
 
-    for (int i = 0; i <= MAXCOLORS; i++) { 
+    for (int i = 0; i <= MAXCOLORS; i++) {
 	current_palette.colors[i] = i;
 	BGIpalette[i] = BGIcolor[i];
     }
@@ -1994,8 +1994,8 @@ void restorecrtmode() {}
 
 //ajout
 
-static int GraphDriver;            
-static int GraphMode;               
+static int GraphDriver;
+static int GraphMode;
 
 void opengraph()
 {

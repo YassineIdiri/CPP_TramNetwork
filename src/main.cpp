@@ -1,86 +1,86 @@
 #include <iostream>
 #include <fstream>
-#include<vector>
-#include<string>
-#include"graphics.h"
-#include "Position.h"
-#include "ChainonArret.h"
-#include "ChainonTram.h"
-#include "ListeChaineeArret.h"
-#include"ListeChaineeTram.h"
+#include <vector>
+#include <string>
+#include "../headers/graphics.h"
+#include "../headers/Position.h"
+#include "../headers/NodeStation.h"
+#include "../headers/NodeTram.h"
+#include "../headers/LinkedListStations.h"
+#include "../headers/LinkedListTrams.h"
 #include <windows.h>
 #include <time.h>
-#include "Ligne.h"
+#include "../headers/Line.h"
 const int Larg = 1300;
 const int Haut = 700;
 
 using namespace std;
 
 
-void chargerDonnee(vector <Ligne> &donnee) //charger les données a partir du fichier txt
+void loadData(vector <Line> &data)
 {
-    ifstream fichier("Lignes.txt");
-    if(!fichier)
+    ifstream file("Lines.txt");
+    if(!file)
     {
-        cout<<"Le fichier n'a pas pu s'ouvrir."<<endl;
+        cout<<"File can't be open"<<endl;
     }
     else
     {
-        string nomTram,nomArret,nomLigne,n;
+        string tramName,stationName,lineName,n;
         char c;
-        int x,y,v,nbLignes,nbArrets;
+        int x,y,v,linesNumber,stationsNumber;
 
-        fichier>>n>>nbLignes;
+        file>>n>>linesNumber;
 
-        donnee.resize(nbLignes);
-        for(int i=0; i<nbLignes ; i++)
+        data.resize(linesNumber);
+        for(int i=0; i<linesNumber ; i++)
         {
-            ListeChaineeArret *l = new ListeChaineeArret;
-            ListeChaineeTram *t = new ListeChaineeTram;
-            fichier>>nomLigne>>n>>nbArrets;
+            LinkedListStations *l = new LinkedListStations;
+            LinkedListTrams *t = new LinkedListTrams;
+            file>>lineName>>n>>stationsNumber;
 
-                for(int j = 0; j < nbArrets; j++)
+                for(int j = 0; j < stationsNumber; j++)
                 {
-                    fichier>>nomArret>>c>>x>>c>>y>>c;
+                    file>>stationName>>c>>x>>c>>y>>c;
                     Position p{x,y};
-                    fichier>>nomTram;
-                    if(nomTram!="PasDeTram")
+                    file>>tramName;
+                    if(tramName!="NoTram")
                     {
-                       ChainonArret *a = new ChainonArret{nomArret,p,true};
-                       l->inserer(a);
-                       fichier>>c>>v>>c;
-                       ChainonTram *tr = new ChainonTram{a,v,p};
-                       t->insererTram(tr);
+                       NodeStation *a = new NodeStation{stationName,p,true};
+                       l->insertStation(a);
+                       file>>c>>v>>c;
+                       NodeTram *tr = new NodeTram{a,v,p};
+                       t->inserertTram(tr);
                     }
                     else
                     {
-                       ChainonArret *a = new ChainonArret{nomArret,p,false};
-                       l->inserer(a);
+                       NodeStation *a = new NodeStation{stationName,p,false};
+                       l->insertStation(a);
                     }
                }
-               Ligne b{l,t};
-               donnee[i]=b;
+               Line b{l,t};
+               data[i]=b;
         }
 
     }
 }
 
-bool prochainArretLibre(ChainonTram *t,ChainonArret *prochainArret,vector<Ligne> donnee) //verifie si cet arret est libre (utilisé par le tram d'une
-{                                                                                        //autre ligne ou pas) , permet de gérer les croisements de lignes
+bool nextFreeStatin(NodeTram *t,NodeStation *nextStation,vector<Line> data)
+{
     bool m=false;
     int i=0;
-    while(i<donnee.size() && m==false)
+    while(i<data.size() && m==false)
     {
-        ChainonArret *a=donnee[i].renvoyerLCA()->renvoyerTete();
+        NodeStation *a=data[i].getLLS()->getHead();
         while(a && m==false)
         {
-            if(a->nomArret()==prochainArret->nomArret() && a->estOccupe()==true) //si cet arret est en commun avec una autre ligne (croisement)
-            {                                                                    //et qu'il est occupé
+            if(a->getStationName()==nextStation->getStationName() && a->isOccupied()==true)
+            {
                 m=true;
             }
             else
             {
-                a=a->renvoyerSuivant();
+                a=a->getNext();
             }
         }
         if(m==false)
@@ -92,74 +92,75 @@ bool prochainArretLibre(ChainonTram *t,ChainonArret *prochainArret,vector<Ligne>
     return m;
 }
 
-void avancerReseau(ListeChaineeArret *l, ListeChaineeTram *tr,vector<Ligne> donnee) //fait avancer l'ensemble des trams
+void advanceNetwork(LinkedListStations *l, LinkedListTrams *tr,vector<Line> data)
 {
-   ChainonTram *t = tr->renvoyerTete();
+   NodeTram *t = tr->getHead();
    while(t)
    {
-       if(!(t->estSurArret()))    //si le tram est en marche (n'est pas sur un arret)
+       if(!(t->isAtStation()))
        {
-         if(tr->respecteDistance(t))  //s'il respecte la distance de sécurité
+         if(tr->respectDistance(t))
          {
-           if(l->arretProcheTram(t)) //s'il s'apprcohe d'un arret
+           if(l->getStationNear(t))
            {
-               if(l->arretProcheTram(t)->estOccupe()==false)  //si l'arret n'est pas occupé par un tram de la ligne de la ligne courante
+               if(l->getStationNear(t)->isOccupied()==false)
                {
-                     ChainonArret *prochainArret= l->arretProcheTram(t);
-                     if(prochainArretLibre(t,prochainArret,donnee)==false) //si l'arret n'est pas occupé par un tram d'une autre ligne
+                     NodeStation *nextStation= l->getStationNear(t);
+
+                     if(nextFreeStatin(t,nextStation,data)==false)
                      {
-                         t->modifierArretActuel(l->arretProcheTram(t));  //on le met sur cet arret
-                         t->arretActuel()->rendOccupe(true);
-                         t->mettreSurArret(true);
-                         t->modifierTempsRestant(2);
+                         t->setCurrentStation(l->getStationNear(t));
+                         t->getCurrentStation()->setStationOccupied(true);
+                         t->putOnStation(true);
+                         t->setTimeLeftAtStation(2);
                      }
                }
            }
-             t->avance(); //on le fait avancer
+             t->advance();
         }
        }
        else
        {
-           if(t->tempsRestant()>0)
+           if(t->getTimeLeftAtStation()>0)
            {
-               double nt=t->tempsRestant();
-               nt--;                                  //on decremente le temps restant a l'arret
-               t->modifierTempsRestant(nt);
+               double nt=t->getTimeLeftAtStation();
+               nt--;
+               t->setTimeLeftAtStation(nt);
            }
            else
            {
-               t->mettreSurArret(false);
-               t->arretActuel()->rendOccupe(false);
+               t->putOnStation(false);
+               t->getCurrentStation()->setStationOccupied(false);
            }
        }
-        t=t->renvoyerSuiv();
+        t=t->getNext();
    }
 }
 
 
 
-void affiche(vector <Ligne> donnee)
+void display(vector <Line> data)
 {
-            for(int i=0; i<donnee.size(); i++)
+            for(int i=0; i<data.size(); i++)
             {
-                donnee[i].renvoyerLCT()->efface();
-                avancerReseau(donnee[i].renvoyerLCA(),donnee[i].renvoyerLCT(),donnee);
-                donnee[i].renvoyerLCA()->affiche(i);
-                donnee[i].renvoyerLCT()->affiche();
+                data[i].getLLT()->eraseListTrams();
+                advanceNetwork(data[i].getLLS(),data[i].getLLT(),data);
+                data[i].getLLS()->display(i);
+                data[i].getLLT()->display();
             }
 }
 
 int main()
 {
    opengraphsize(Larg,Haut);
-   vector <Ligne> donne;
-   chargerDonnee(donne);
+   vector <Line> data;
+   loadData(data);
 
    int i=0;
    while(i<500)
    {
        i++;
-       affiche(donne);
+       display(data);
        Sleep(100);
    }
     getch();

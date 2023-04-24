@@ -1,32 +1,32 @@
-#include "Position.h"
 
+#include "../headers/Position.h"
 Position::Position(int x,int y):
     d_x{x},
     d_y{y}
 {
 }
 
-void Position::modifierX(double x)
+void Position::setX(double x)
 {
     d_x=x;
 }
 
-void Position::modifierY(double y)
+void Position::setY(double y)
 {
      d_y=y;
 }
 
-double Position::renvoyerX()const
+double Position::getX()const
 {
   return d_x;
 }
 
-double Position::renvoyerY()const
+double Position::getY()const
 {
    return d_y;
 }
 
-double Position::renvoyerDistance(const Position& p)const
+double Position::getDistance(const Position& p)const
 {
-    return sqrt(  ( (d_x-p.renvoyerX()) * (d_x-p.renvoyerX()) ) + ( (d_y-p.renvoyerY()) * (d_y-p.renvoyerY()) )   );
+    return sqrt(  ( (d_x-p.getX()) * (d_x-p.getX()) ) + ( (d_y-p.getY()) * (d_y-p.getY()) )   );
 }
