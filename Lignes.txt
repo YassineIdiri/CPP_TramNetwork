@@ -1,56 +1,56 @@
-NombreLignes: 4
+NumberOfLines: 4
 
-Ligne1
-NombreArrets: 4
+Line1
+NumberOfStations: 4
 
-Chataigner (100;100)
+ActonTown (100;100)
 Tram1 (7)
-St-Nazaire (300;300)
-PasDeTram
-Tuilerie (700;300)
+Aldgate (300;300)
+NoTram
+Alperton (700;300)
 Tram2  (7)
-Rattachement (900;100)
+Amersham (900;100)
 Tram3  (8)
 
-Ligne2
-NombreArrets: 5
+Line2
+NumberOfStations: 5
 
-BelAir (100;400)
+Balham (100;400)
 Tram4 (8)
-Daguerre (200;500)
-PasDeTram
-Porte-Haute (550;450)
-PasDeTram
-CiteAdministrative (800;400)
-PasDeTram
-Illberg (1200;400)
+Barkingside (200;500)
+NoTram
+Bermondsey (550;450)
+NoTram
+Brixton (800;400)
+NoTram
+Borough (1200;400)
 Tram5 (8)
 
-Ligne3
-NombreArrets: 5
+Line3
+NumberOfStations: 5
 
-Doller (700;650)
+Chigwell (700;650)
 Tram6 (7)
-Coteau (750;500)
-PasDeTram
-CiteAdministrative (800;400)
+Edgware (750;500)
+NoTram
+Croxley (800;400)
 Tram7 (7) 
-GrandRex (980;230)
-PasDeTram
-PorteHaute (1200;100)
+Fairlop (980;230)
+NoTram
+Euston (1200;100)
 Tram8 (8)
 
-Ligne4
-NombreArrets: 5
+Line4
+NumberOfStations: 5
 
-Republique (100;600)
+Harlesden (100;600)
 Tram9 (7)
-Daguerre (200;500)
+Highgate (200;500)
 Tram10 (7)
-St-Nazaire (300;300)
+Hornchurch (300;300)
 Tram11 (8)
-Universite (300;100)
-PasDeTram
-GareCentrale (700;50)
+Ickenham (300;100)
+NoTram
+Kingsbury (700;50)
 Tram12 (8)
 
