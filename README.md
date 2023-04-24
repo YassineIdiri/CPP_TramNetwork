@@ -12,7 +12,7 @@
   
 </div>
 
-- Download CodeBlocks (to use the library grapgics WinbGi).
+- Download CodeBlocks (to use the graphics library WinbGi).
 - Create a C++ project and add all the files.    
 - Then add the text document "Ligne.txt" in the same directory. 
 - In CodeBlocks, in the Settings menu, go to the Compiler tab and select the Linker settings option. Then, under the Other linker options section, type "-lgdi32" and      click OK.
