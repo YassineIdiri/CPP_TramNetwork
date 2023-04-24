@@ -6,11 +6,11 @@ class Position
 {
     public:
         Position(int x=0,int y=0);
-        double renvoyerX()const;
-        double renvoyerY()const;
-        void modifierX(double x);
-        void modifierY(double y);
-        double renvoyerDistance(const Position& p)const;
+        double getX()const;
+        double getY()const;
+        void setX(double x);
+        void setY(double y);
+        double getDistance(const Position& p)const;
 
     private:
         double d_x;
